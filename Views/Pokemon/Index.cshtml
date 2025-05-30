@@ -1,0 +1,122 @@
+﻿@model List<App_Pokemon_Aaron.Models.PokemonViewModel>
+
+@{
+    ViewData["Title"] = "Consumo de la API de Pokémon y filtrado con paginación";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<div class="container mt-4">
+    <h2 class="mb-4 text-center"> Consumo de la API de Pokémon y filtrado con paginación</h2>
+
+    <form method="get" asp-controller="Pokemon" asp-action="Index" class="mb-4 d-felx justify-content-center">
+        <label> Filtros</label>
+        <br />
+        <div class="row">
+            <div class="col-6">
+                <input type="text" name="name" value="@ViewBag.NameFilter" class="form-control " placeholder="Escribe el nombre del Pokemon" />
+            </div>
+            <div class="col-6">
+                <select name="species" class="form-select  me-2">
+                    <option value="" selected ="@(string.IsNullOrEmpty(ViewBag.SpeciesFilter) ? "selected" : null)">Elige una especie</option>
+                    
+
+                    @foreach (var sp in (List<string>)ViewBag.SpeciesList)
+                    {
+                        
+                        if (!string.IsNullOrEmpty(sp))
+                        {
+                            <option value="@sp" selected="@(ViewBag.SpeciesFilter == sp ? "selected" : null)">@sp</option>
+                        }
+                        
+                    }
+                </select>
+            </div>
+            <script>
+                //filtro especies
+                document.querySelector('select[name="species"]').addEventListener('change' , function(){
+                    const input = document.querySelector('input[name="name"]');
+                    if(input.value === "0" || input.value)
+                    {
+                        input.value = '';
+                    }
+                    this.form.submit();
+                });
+                //filtro nombres
+                document.querySelector('input[name="name"]').addEventListener('input', function(){
+                    const select = document.querySelector('select[name="species"]');
+                    if(select.value)
+                    {
+                        select.selectedIndex = 0;
+                    }
+                });
+                document.querySelector('input[name="name"]').addEventListener('Keyup' , function (event){
+                    if(event.key === "Enter")
+                    {
+                        event.preventDefault();
+                        this.form.submit();
+                    }
+                });
+            </script>
+        </div>
+    </form>
+    <hr />
+    <div class="row">
+        <div class="col-6">
+            <a href="@Url.Action("DescargarExcel", "Pokemon")" class="btn btn-success mb-3">
+                Descargar Excel
+            </a>
+        </div>
+        <div class="col-6">
+            <form  asp-action="EnviarCorreo" method="post">
+                <button type="submit" class="btn btn-primary">Enviar Excel Por Correo </button>
+            </form>
+        </div>
+    </div>
+   
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
+        @foreach (var pokemon in Model)
+        {
+            <div class="col">
+                <div class="card h-100 text-center rounded-2">
+                    <img src="@pokemon.ImageUrl" class="card-img-top" alt="@pokemon.Name" />
+                    <div class="card-body">
+                        <h5 class="card-title text-capitalize">@pokemon.Name</h5>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@{
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int startPage = Math.Max(currentPage - 5, 1);
+    int totalPage = ViewBag.TotalPages ?? 1;
+}
+
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        <!--boton izquierdo-->
+        <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+            <a class="page-link rounded" href="@Url.Action("Index", new{ page = currentPage - 1 , name = ViewBag.NameFilter , species = ViewBag.SpeciesFilter })" aria-label="Previous">
+                <span aria-hidden="true">&#9664;</span> <!--este es el codigo para hacer el triangulo de lado izquierdo-->
+            </a>
+        </li>
+        <!--numero de pagina-->
+        @for (int i = startPage; i <= Math.Min(startPage + 9, totalPage); i++)
+        {
+            <li class="page-item @(i == currentPage ? "active" : "")">
+                <a class="page-link rounded" href="@Url.Action("Index" , new { page=i , nameof = ViewBag.NameFilter , species = ViewBag.SpeciesFilter })">@i</a>
+            </li>
+        }
+        <!--boton derecho-->
+        <li class="page-item @(currentPage >= totalPage ? "disabled" : "")">
+            <a class="page-link rounded" href="@Url.Action("Index" , new { page = currentPage + 1 , nameof = ViewBag.NameFilter , species = ViewBag.SpeciesFilter})" aria-label="Next">
+                <span aria-hidden="true">&#9654;</span> <!--este es el codigo para hacer el triangulo de lado derecho-->
+            </a>
+        </li>
+    </ul>
+</nav>
+<br />
+<br />
